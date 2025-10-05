@@ -13,6 +13,12 @@
                 <div class="card-body">
                     <table>
                         <tr>
+                            <h1>{{ $data->foto }}</h1>
+                            @if ($data->foto)
+                                <img src="data:image/jpeg;base64,{{ base64_encode($data->foto) }}" width="200">
+                            @endif
+                        </tr>
+                        <tr>
                             <th>Nama</th>
                             <td>:</td>
                             <td>{{$data->nama}}</td>
@@ -41,6 +47,14 @@
                             <th>Jenis</th>
                             <td>:</td>
                             <td>{{$data->jenis}}</td>
+                        </tr>
+                        <tr>
+                            <p>Kategori:</p>
+                                <ul>
+                                    @foreach($data->categories as $cat)
+                                        <li>{{ $cat->nama }}</li>
+                                    @endforeach
+                                </ul>
                         </tr>
                     </table>
                     <a class="btn btn-info" href="{{url('master-items/form/edit')}}/{{$data->id}}">Edit</a>

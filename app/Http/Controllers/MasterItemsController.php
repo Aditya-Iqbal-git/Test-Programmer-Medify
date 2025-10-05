@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterItem;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class MasterItemsController extends Controller
@@ -23,8 +24,14 @@ class MasterItemsController extends Controller
 
         if (!empty($kode)) $data_search = $data_search->where('kode', $kode);
         if (!empty($nama)) $data_search = $data_search->where('nama', 'LIKE', '%' . $nama . '%');
-        if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin)->where('harga_beli', '<=', $hargamax);
-
+        //if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin)->where('harga_beli', '<=', $hargamax);
+        if(!empty($hargamin)){
+            $data_search->where('harga_beli', '>=', $hargamin);
+        }
+        if(!empty($hargamax)){
+            $data_search->where('harga_beli', '<=', $hargamax);
+        }
+        //$result = $data_search->get();
         $data_search = $data_search->select('kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier')->orderBy('id')->get();
 
 
@@ -54,6 +61,17 @@ class MasterItemsController extends Controller
 
     public function formSubmit(Request $request, $method, $id = 0)
     {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'kategori' => 'nullable|array',
+            'kategori.*' => 'exists:categories,id',
+            'harga_beli' => 'required|numeric|min:0',
+            'laba' => 'required|numeric|min:0',
+            'supplier' => 'required|string',
+            'jenis' => 'required|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
         if ($method == 'new') {
             $data_item = new MasterItem;
             $kode = MasterItem::count('id');
@@ -71,9 +89,31 @@ class MasterItemsController extends Controller
         $data_item->kode = $kode;
         $data_item->supplier = $request->supplier;
         $data_item->jenis = $request->jenis;
+
+        if ($request->hasFile('foto')) {
+            $image = $request->file('foto');
+            $imageData = file_get_contents($image->getRealPath());
+            $data_item->foto = $imageData;
+        }
+
         $data_item->save();
 
+        $data_item->categories()->sync($request->kategori ?? []);
+
         return redirect('master-items');
+    }
+
+    public function create()
+    {
+        $categories = Category::all(); // ambil semua kategori
+        return view('master_items.create', compact('categories'));
+    }
+
+    public function edit($id)
+    {
+        $data_item = MasterItem::findOrFail($id);
+        $categories = Category::all(); // ambil semua kategori
+        return view('master_items.edit', compact('data_item', 'categories'));
     }
 
     public function delete($id)
