@@ -43,14 +43,15 @@ class MasterItemsController extends Controller
 
     public function formView($method, $id = 0)
     {
+        $categories = Category::all(); // ambil semua kategori
+
         if ($method == 'new') {
-            $item = [];
+            $data_item = null; // untuk create form
         } else {
-            $item = MasterItem::find($id);
+            $data_item = MasterItem::with('categories')->findOrFail($id);
         }
-        $data['item'] = $item;
-        $data['method'] = $method;
-        return view('master_items.form.index', $data);
+
+        return view('master_items.form.index', compact('data_item', 'categories', 'method'));
     }
 
     public function singleView($kode)
@@ -105,8 +106,8 @@ class MasterItemsController extends Controller
 
     public function create()
     {
-        $categories = Category::all(); // ambil semua kategori
-        return view('master_items.create', compact('categories'));
+        $categories = Category::all();
+        return view('master_items.form', compact('categories'));
     }
 
     public function edit($id)
